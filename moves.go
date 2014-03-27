@@ -8,7 +8,7 @@ func (self *Board) PawnMoves(x, y int) (moves []*Move) {
 
 	// Get the figure
 	figure := self.Get(x, y)
-	if figure == nil || figure.model != Pawn {
+	if figure == nil {
 		return
 	}
 
@@ -56,7 +56,7 @@ func (self *Board) PawnMoves(x, y int) (moves []*Move) {
 func (self *Board) KnightMoves(x, y int) (moves []*Move) {
 	// Get the figure
 	figure := self.Get(x, y)
-	if figure == nil || figure.model != Knight {
+	if figure == nil {
 		return
 	}
 
@@ -88,15 +88,14 @@ func (self *Board) KnightMoves(x, y int) (moves []*Move) {
 			}
 		}
 	}
-	return
 
-	return nil
+	return
 }
 
 func (self *Board) RookMoves(x, y int) (moves []*Move) {
 	// Get the figure
 	figure := self.Get(x, y)
-	if figure == nil || figure.model != Rook {
+	if figure == nil {
 		return
 	}
 
@@ -154,7 +153,7 @@ func (self *Board) RookMoves(x, y int) (moves []*Move) {
 func (self *Board) BishopMoves(x, y int) (moves []*Move) {
 	// Get the figure
 	figure := self.Get(x, y)
-	if figure == nil || figure.model != Bishop {
+	if figure == nil {
 		return
 	}
 
@@ -194,92 +193,7 @@ func (self *Board) BishopMoves(x, y int) (moves []*Move) {
 }
 
 func (self *Board) QueenMoves(x, y int) (moves []*Move) {
-	// Get the figure
-	figure := self.Get(x, y)
-	if figure == nil || figure.model != Queen {
-		return
-	}
-
-	// Going vertically
-	for _, direction := range []int{-1, 1} {
-
-		// Walk into direction
-		for ny := y + direction; ny >= 0 && ny < 8; ny += direction {
-
-			// Check board bounds
-			if _, _, ok := self.ValidateWalls(x, ny); ok {
-				// Get figure
-				enemy := self.Get(x, ny)
-
-				// If there is no figure or the figure is an enemy
-				if enemy == nil || enemy.white != figure.white {
-					moves = append(moves, &Move{figure, enemy, x, y, x, ny, false})
-				}
-
-				if enemy != nil {
-					break
-				}
-			} else {
-				break
-			}
-		}
-	}
-
-	// Going horizontally
-	for _, direction := range []int{-1, 1} {
-		// Walk into direction
-		for nx := x + direction; nx >= 0 && nx < 8; nx += direction {
-			// Check board bounds
-			if _, _, ok := self.ValidateWalls(nx, y); ok {
-				// Get figure
-				enemy := self.Get(nx, y)
-
-				// If there is no figure or the figure is an enemy
-				if enemy == nil || enemy.white != figure.white {
-					moves = append(moves, &Move{figure, enemy, x, y, nx, y, false})
-				}
-
-				if enemy != nil {
-					break
-				}
-			} else {
-				break
-			}
-		}
-	}
-
-	// Left and right
-	for _, diagonal := range []int{-1, 1} {
-
-		// Up and down
-		for _, direction := range []int{-1, 1} {
-
-			// The movement offsets
-			offx, offy := direction*diagonal, direction
-
-			// Walk into direction
-			for nx, ny := x+offx, y+offy; nx >= 0 && nx < 8 &&
-				ny >= 0 && ny < 8; nx, ny = nx+offx, ny+offy {
-
-				// Check board bounds
-				if _, _, ok := self.ValidateWalls(nx, ny); ok {
-					// Get figure
-					enemy := self.Get(nx, ny)
-
-					// If there is no figure or the figure is an enemy
-					if enemy == nil || enemy.white != figure.white {
-						moves = append(moves, &Move{figure, enemy, x, y, nx, ny, false})
-					}
-
-					if enemy != nil {
-						break
-					}
-				} else {
-					break
-				}
-			}
-		}
-	}
+	moves = append(self.RookMoves(x, y), self.BishopMoves(x, y)...)
 	return
 }
 
