@@ -29,3 +29,7 @@ func (self *Board) IsKingChecked(x, y int) bool {
 
 	return false
 }
+
+func (self *Board) IsValidKingMove(move *Move) bool {
+	return !self.ApplyMove(move).IsFoundKingChecked(move.FigureOrigin.white)
+}

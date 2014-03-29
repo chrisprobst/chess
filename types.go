@@ -6,13 +6,20 @@ import (
 
 type Model int
 type Transform int
+type Flag int
 
 type Figure struct {
 	white bool
 	model Model
+	flags Flag
 }
 
 type Board [8][8]*Figure
+
+const (
+	Idle  = Flag(0)
+	Moved = Flag(1 << 0)
+)
 
 const (
 	Rook   = Model(1)
@@ -23,16 +30,11 @@ const (
 	Pawn   = Model(6)
 )
 
-const (
-	NoTransform       = Transform(0)
-	PawnTransform     = Transform(1)
-	KingRookTransform = Transform(2)
-)
-
 type Move struct {
 	FigureOrigin, FigureDest       *Figure
 	XOrigin, YOrigin, XDest, YDest int
-	TransformMove                  Transform
+	TransformInto                  []*Figure
+	SubMove                        *Move
 }
 
 func (self *Board) Find(white bool, model Model) (int, int, bool) {
@@ -94,12 +96,21 @@ func (self *Board) ApplyMove(move *Move) *Board {
 	copy := *self
 	ptr := &copy
 
-	if !ptr.Set(move.XDest, move.YDest, move.FigureOrigin) {
-		panic("Invalid move")
-	}
+	for movePtr := move; movePtr != nil; movePtr = movePtr.SubMove {
+		// Create copy of the struct
+		copy := *movePtr.FigureOrigin
+		movePtr.FigureOrigin = &copy
 
-	if !ptr.Set(move.XOrigin, move.YOrigin, nil) {
-		panic("Invalid move")
+		if !ptr.Set(movePtr.XDest, movePtr.YDest, movePtr.FigureOrigin) {
+			panic("Invalid move")
+		}
+
+		// This figure has already moved
+		movePtr.FigureOrigin.flags |= Moved
+
+		if !ptr.Set(movePtr.XOrigin, movePtr.YOrigin, nil) {
+			panic("Invalid move")
+		}
 	}
 
 	return ptr

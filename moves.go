@@ -20,29 +20,37 @@ func (self *Board) PawnMoves(x, y int) (moves []*Move) {
 	}
 
 	// Check if this pawn would transform into something
-	transformMove := NoTransform
+	var transformInto []*Figure
 	if newLoc := y + direction; newLoc == 0 || newLoc == 7 {
-		transformMove = PawnTransform
+		transformInto = append(transformInto,
+			&Figure{figure.white, Knight, Idle},
+			&Figure{figure.white, Bishop, Idle},
+			&Figure{figure.white, Queen, Idle},
+			&Figure{figure.white, Rook, Idle})
 	}
 
 	// Check usual forward movement
 	if self.IsFree(x, y+direction) {
 
 		// Append the forward move
-		moves = append(moves, &Move{figure, nil, x, y, x, y + direction, transformMove})
+		moves = append(moves, &Move{figure, nil, x, y, x, y + direction, transformInto, nil})
 
-		// Check double forward movement
-		if (y == 1 || y == 6) && self.IsFree(x, y+2*direction) {
+		// Check end of trail
+		if _, _, ok := self.ValidateWalls(x, y+2*direction); ok {
 
-			// Append double move
-			moves = append(moves, &Move{figure, nil, x, y, x, y + 2*direction, NoTransform})
+			// Check double forward movement
+			if (y == 1 || y == 6) && self.IsFree(x, y+2*direction) {
+
+				// Append double move
+				moves = append(moves, &Move{figure, nil, x, y, x, y + 2*direction, nil, nil})
+			}
 		}
 	}
 
 	// Check if we can hit an enemy
 	for _, offset := range []int{-1, 1} {
 		if enemy := self.Get(x+offset, y+direction); enemy != nil && enemy.white != figure.white {
-			moves = append(moves, &Move{figure, enemy, x, y, x + offset, y + direction, transformMove})
+			moves = append(moves, &Move{figure, enemy, x, y, x + offset, y + direction, transformInto, nil})
 		}
 	}
 
@@ -79,7 +87,7 @@ func (self *Board) KnightMoves(x, y int) (moves []*Move) {
 				if enemy == nil || enemy.white != figure.white {
 
 					// Append this move
-					moves = append(moves, &Move{figure, enemy, x, y, nx, ny, NoTransform})
+					moves = append(moves, &Move{figure, enemy, x, y, nx, ny, nil, nil})
 				}
 			}
 		}
@@ -114,7 +122,7 @@ func (self *Board) straightMoves(x, y, maxHops int) (moves []*Move) {
 
 					// If there is no figure or the figure is an enemy
 					if enemy == nil || enemy.white != figure.white {
-						moves = append(moves, &Move{figure, enemy, x, y, nx, ny, NoTransform})
+						moves = append(moves, &Move{figure, enemy, x, y, nx, ny, nil, nil})
 					}
 
 					if enemy != nil {
@@ -160,7 +168,7 @@ func (self *Board) diagonalMoves(x, y, maxHops int) (moves []*Move) {
 
 					// If there is no figure or the figure is an enemy
 					if enemy == nil || enemy.white != figure.white {
-						moves = append(moves, &Move{figure, enemy, x, y, nx, ny, NoTransform})
+						moves = append(moves, &Move{figure, enemy, x, y, nx, ny, nil, nil})
 					}
 
 					if enemy != nil {
@@ -200,13 +208,49 @@ func (self *Board) KingMoves(x, y int) (moves []*Move) {
 
 	// Iterate over all tmp moves
 	for _, move := range tmpMoves {
-
-		// Create a new board for each move
-		copy := self.ApplyMove(move)
-
-		// The move does not provoke check
-		if !copy.IsKingChecked(move.XDest, move.YDest) {
+		if self.IsValidKingMove(move) {
 			moves = append(moves, move)
+		}
+	}
+
+	// The king-rook moves
+	if !self.IsKingChecked(x, y) {
+
+		// For both rooks
+		for dx := range []int{0, 7} {
+
+			// Lookup rook
+			rook := self.Get(dx, y)
+
+			// If rook exists and has the same color and has not moved yet!
+			if rook != nil && rook.white == figure.white && rook.flags&Moved == 0 {
+
+				// Compute the relevant scalars
+				offset, direction, distance := 1, 1, x-2
+				if dx == 7 {
+					offset, direction, distance = 6, -1, 7-x-2
+				}
+
+				// Check if the rook can move
+				freeSpace := true
+				for i := 0; i < distance; i++ {
+					if !self.IsFree(offset+i*direction, y) {
+						freeSpace = false
+						break
+					}
+				}
+
+				if freeSpace {
+					// Create the king-rook move
+					kingRookMove := &Move{figure, nil, x, y, x - 2*direction, y, nil, &Move{rook, nil, 0, y, x - direction, y, nil, nil}}
+
+					// Add the king-rook move if valid
+					if self.IsValidKingMove(kingRookMove) {
+						moves = append(moves, kingRookMove)
+					}
+
+				}
+			}
 		}
 	}
 

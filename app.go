@@ -6,14 +6,12 @@ import (
 
 func main() {
 	var board Board
-	board.Set(0, 0, &Figure{false, Rook})
-	board.Set(3, 3, &Figure{false, Rook})
-
-	board.Set(2, 2, &Figure{true, King})
+	board.Set(0, 0, &Figure{true, Rook, Idle})
+	board.Set(3, 0, &Figure{true, King, Idle})
 
 	board.Print()
 
-	for _, i := range board.Moves(2, 2) {
+	for _, i := range board.Moves(3, 0) {
 		fmt.Println(i)
 	}
 }
