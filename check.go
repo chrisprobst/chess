@@ -10,15 +10,15 @@ func (self *Board) IsFoundKingChecked(white bool) bool {
 func (self *Board) IsKingChecked(x, y int) bool {
 	// Get the king
 	king := self.Get(x, y)
-	if king == nil || king.model != King {
+	if king == nil || king.Model != King {
 		return false
 	}
 
 	// Check if any enemy threaten the king
 	for ny := 0; ny < 8; ny++ {
 		for nx := 0; nx < 8; nx++ {
-			if enemy := self.Get(nx, ny); enemy != nil && enemy.white != king.white {
-				for _, move := range self.Moves(nx, ny) {
+			if enemy := self.Get(nx, ny); enemy != nil && enemy.White != king.White {
+				for _, move := range self.moves(nx, ny, true) {
 					if move.FigureDest == king {
 						return true
 					}
@@ -31,5 +31,5 @@ func (self *Board) IsKingChecked(x, y int) bool {
 }
 
 func (self *Board) IsValidKingMove(move *Move) bool {
-	return !self.ApplyMove(move).IsFoundKingChecked(move.FigureOrigin.white)
+	return !self.ApplyMove(move).IsFoundKingChecked(move.FigureOrigin.White)
 }

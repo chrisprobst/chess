@@ -9,12 +9,97 @@ type Transform int
 type Flag int
 
 type Figure struct {
-	white bool
-	model Model
-	flags Flag
+	White bool
+	Model Model
+	Flags Flag
+}
+
+func (self *Figure) Print() {
+	switch self.Model {
+	case Pawn:
+		if self.White {
+			fmt.Print("P")
+		} else {
+			fmt.Print("p")
+		}
+	case Knight:
+		if self.White {
+			fmt.Print("N")
+		} else {
+			fmt.Print("n")
+		}
+	case Rook:
+		if self.White {
+			fmt.Print("R")
+		} else {
+			fmt.Print("r")
+		}
+	case Bishop:
+		if self.White {
+			fmt.Print("B")
+		} else {
+			fmt.Print("b")
+		}
+	case King:
+		if self.White {
+			fmt.Print("K")
+		} else {
+			fmt.Print("k")
+		}
+	case Queen:
+		if self.White {
+			fmt.Print("Q")
+		} else {
+			fmt.Print("q")
+		}
+	}
+}
+
+func NewFigure(white bool, model Model) *Figure {
+	return &Figure{white, model, Idle}
+}
+
+func NewWhiteFigure(model Model) *Figure {
+	return &Figure{true, model, Idle}
+}
+
+func NewBlackFigure(model Model) *Figure {
+	return &Figure{false, model, Idle}
 }
 
 type Board [8][8]*Figure
+
+func NewBoard() *Board {
+	var board Board
+
+	board.Set(0, 0, NewWhiteFigure(Rook))
+	board.Set(1, 0, NewWhiteFigure(Knight))
+	board.Set(2, 0, NewWhiteFigure(Bishop))
+	board.Set(3, 0, NewWhiteFigure(King))
+	board.Set(4, 0, NewWhiteFigure(Queen))
+	board.Set(5, 0, NewWhiteFigure(Bishop))
+	board.Set(6, 0, NewWhiteFigure(Knight))
+	board.Set(7, 0, NewWhiteFigure(Rook))
+
+	for i := 0; i < 8; i++ {
+		board.Set(i, 1, NewWhiteFigure(Pawn))
+	}
+
+	board.Set(0, 7, NewBlackFigure(Rook))
+	board.Set(1, 7, NewBlackFigure(Knight))
+	board.Set(2, 7, NewBlackFigure(Bishop))
+	board.Set(3, 7, NewBlackFigure(King))
+	board.Set(4, 7, NewBlackFigure(Queen))
+	board.Set(5, 7, NewBlackFigure(Bishop))
+	board.Set(6, 7, NewBlackFigure(Knight))
+	board.Set(7, 7, NewBlackFigure(Rook))
+
+	for i := 0; i < 8; i++ {
+		board.Set(i, 6, NewBlackFigure(Pawn))
+	}
+
+	return &board
+}
 
 const (
 	Idle  = Flag(0)
@@ -41,7 +126,7 @@ func (self *Board) Find(white bool, model Model) (int, int, bool) {
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 8; x++ {
 			if figure := self.Get(x, y); figure != nil &&
-				figure.white == white && figure.model == model {
+				figure.White == white && figure.Model == model {
 				return x, y, true
 			}
 		}
@@ -81,9 +166,9 @@ func (self *Board) Print() {
 	for _, row := range self {
 		for _, piece := range row {
 			if piece != nil {
-				fmt.Print(piece.model)
+				piece.Print()
 			} else {
-				fmt.Print("#")
+				fmt.Print(".")
 			}
 		}
 		fmt.Println()
@@ -106,7 +191,7 @@ func (self *Board) ApplyMove(move *Move) *Board {
 		}
 
 		// This figure has already moved
-		movePtr.FigureOrigin.flags |= Moved
+		movePtr.FigureOrigin.Flags |= Moved
 
 		if !ptr.Set(movePtr.XOrigin, movePtr.YOrigin, nil) {
 			panic("Invalid move")

@@ -2,16 +2,56 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	//"time"
 )
 
 func main() {
-	var board Board
-	board.Set(0, 0, &Figure{true, Rook, Idle})
-	board.Set(3, 0, &Figure{true, King, Idle})
-
+	board := NewBoard()
 	board.Print()
 
-	for _, i := range board.Moves(3, 0) {
-		fmt.Println(i)
+	white := true
+	for {
+		moved := false
+		if board.IsFoundKingChecked(white) {
+
+			x, y, _ := board.Find(white, King)
+			moves := board.Moves(x, y)
+
+			if len(moves) == 0 {
+				fmt.Println("CheckMate: ", white, " has lost!")
+				break
+			}
+
+			board = board.ApplyMove(moves[rand.Intn(len(moves))])
+			board.Print()
+			//time.Sleep(1 * time.Second)
+			moved = true
+			white = !white
+
+		} else {
+		loop:
+			for ny := 0; ny < 8; ny++ {
+				for nx := 0; nx < 8; nx++ {
+					figure := board.Get(nx, ny)
+					if figure != nil && figure.White == white {
+						moves := board.Moves(nx, ny)
+						if len(moves) > 0 {
+							board = board.ApplyMove(moves[rand.Intn(len(moves))])
+							board.Print()
+							//time.Sleep(1 * time.Second)
+							moved = true
+							white = !white
+
+							break loop
+						}
+					}
+				}
+			}
+		}
+		if !moved {
+			fmt.Println(white, " has lost!")
+			break
+		}
 	}
 }

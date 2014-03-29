@@ -10,7 +10,7 @@ func (self *Board) PawnMoves(x, y int) (moves []*Move) {
 
 	// Color to direction
 	direction := 1
-	if !figure.white {
+	if !figure.White {
 		direction = -1
 	}
 
@@ -23,10 +23,10 @@ func (self *Board) PawnMoves(x, y int) (moves []*Move) {
 	var transformInto []*Figure
 	if newLoc := y + direction; newLoc == 0 || newLoc == 7 {
 		transformInto = append(transformInto,
-			&Figure{figure.white, Knight, Idle},
-			&Figure{figure.white, Bishop, Idle},
-			&Figure{figure.white, Queen, Idle},
-			&Figure{figure.white, Rook, Idle})
+			NewFigure(figure.White, Knight),
+			NewFigure(figure.White, Bishop),
+			NewFigure(figure.White, Rook),
+			NewFigure(figure.White, Queen))
 	}
 
 	// Check usual forward movement
@@ -49,7 +49,7 @@ func (self *Board) PawnMoves(x, y int) (moves []*Move) {
 
 	// Check if we can hit an enemy
 	for _, offset := range []int{-1, 1} {
-		if enemy := self.Get(x+offset, y+direction); enemy != nil && enemy.white != figure.white {
+		if enemy := self.Get(x+offset, y+direction); enemy != nil && enemy.White != figure.White {
 			moves = append(moves, &Move{figure, enemy, x, y, x + offset, y + direction, transformInto, nil})
 		}
 	}
@@ -84,7 +84,7 @@ func (self *Board) KnightMoves(x, y int) (moves []*Move) {
 				enemy := self.Get(nx, ny)
 
 				// If there is no figure or the figure is an enemy
-				if enemy == nil || enemy.white != figure.white {
+				if enemy == nil || enemy.White != figure.White {
 
 					// Append this move
 					moves = append(moves, &Move{figure, enemy, x, y, nx, ny, nil, nil})
@@ -121,7 +121,7 @@ func (self *Board) straightMoves(x, y, maxHops int) (moves []*Move) {
 					enemy := self.Get(nx, ny)
 
 					// If there is no figure or the figure is an enemy
-					if enemy == nil || enemy.white != figure.white {
+					if enemy == nil || enemy.White != figure.White {
 						moves = append(moves, &Move{figure, enemy, x, y, nx, ny, nil, nil})
 					}
 
@@ -167,7 +167,7 @@ func (self *Board) diagonalMoves(x, y, maxHops int) (moves []*Move) {
 					enemy := self.Get(nx, ny)
 
 					// If there is no figure or the figure is an enemy
-					if enemy == nil || enemy.white != figure.white {
+					if enemy == nil || enemy.White != figure.White {
 						moves = append(moves, &Move{figure, enemy, x, y, nx, ny, nil, nil})
 					}
 
@@ -195,7 +195,7 @@ func (self *Board) QueenMoves(x, y int) []*Move {
 	return append(self.RookMoves(x, y), self.BishopMoves(x, y)...)
 }
 
-func (self *Board) KingMoves(x, y int) (moves []*Move) {
+func (self *Board) KingMoves(x, y int, testKingMove bool) (moves []*Move) {
 	// Get the figure
 	figure := self.Get(x, y)
 	if figure == nil {
@@ -208,13 +208,13 @@ func (self *Board) KingMoves(x, y int) (moves []*Move) {
 
 	// Iterate over all tmp moves
 	for _, move := range tmpMoves {
-		if self.IsValidKingMove(move) {
+		if testKingMove || self.IsValidKingMove(move) {
 			moves = append(moves, move)
 		}
 	}
 
 	// The king-rook moves
-	if !self.IsKingChecked(x, y) {
+	if !testKingMove && !self.IsKingChecked(x, y) && figure.Flags&Moved == 0 {
 
 		// For both rooks
 		for dx := range []int{0, 7} {
@@ -223,7 +223,7 @@ func (self *Board) KingMoves(x, y int) (moves []*Move) {
 			rook := self.Get(dx, y)
 
 			// If rook exists and has the same color and has not moved yet!
-			if rook != nil && rook.white == figure.white && rook.flags&Moved == 0 {
+			if rook != nil && rook.White == figure.White && rook.Flags&Moved == 0 {
 
 				// Compute the relevant scalars
 				offset, direction, distance := 1, 1, x-2
@@ -242,13 +242,14 @@ func (self *Board) KingMoves(x, y int) (moves []*Move) {
 
 				if freeSpace {
 					// Create the king-rook move
-					kingRookMove := &Move{figure, nil, x, y, x - 2*direction, y, nil, &Move{rook, nil, 0, y, x - direction, y, nil, nil}}
+					kingRookMove := &Move{figure, nil, x, y, x - 2*direction, y, nil,
+						&Move{rook, nil, 0, y, x - direction, y, nil, nil},
+					}
 
 					// Add the king-rook move if valid
 					if self.IsValidKingMove(kingRookMove) {
 						moves = append(moves, kingRookMove)
 					}
-
 				}
 			}
 		}
@@ -258,12 +259,16 @@ func (self *Board) KingMoves(x, y int) (moves []*Move) {
 }
 
 func (self *Board) Moves(x, y int) (moves []*Move) {
+	return self.moves(x, y, false)
+}
+
+func (self *Board) moves(x, y int, testKingMove bool) (moves []*Move) {
 	figure := self.Get(x, y)
 	if figure == nil {
 		return nil
 	}
 
-	switch figure.model {
+	switch figure.Model {
 	case Pawn:
 		moves = self.PawnMoves(x, y)
 	case Knight:
@@ -275,7 +280,7 @@ func (self *Board) Moves(x, y int) (moves []*Move) {
 	case Queen:
 		moves = self.QueenMoves(x, y)
 	case King:
-		moves = self.KingMoves(x, y)
+		moves = self.KingMoves(x, y, testKingMove)
 	}
 	return
 }
