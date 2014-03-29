@@ -195,7 +195,7 @@ func (self *Board) QueenMoves(x, y int) []*Move {
 	return append(self.RookMoves(x, y), self.BishopMoves(x, y)...)
 }
 
-func (self *Board) KingMoves(x, y int, testKingMove bool) (moves []*Move) {
+func (self *Board) KingMoves(x, y int, ignoreCheckAndCastling bool) (moves []*Move) {
 	// Get the figure
 	figure := self.Get(x, y)
 	if figure == nil {
@@ -208,13 +208,13 @@ func (self *Board) KingMoves(x, y int, testKingMove bool) (moves []*Move) {
 
 	// Iterate over all tmp moves
 	for _, move := range tmpMoves {
-		if testKingMove || self.IsValidKingMove(move) {
+		if ignoreCheckAndCastling || self.IsValidKingMove(move) {
 			moves = append(moves, move)
 		}
 	}
 
 	// The king-rook moves
-	if !testKingMove && !self.IsKingChecked(x, y) && figure.Flags&Moved == 0 {
+	if !ignoreCheckAndCastling && !self.IsKingChecked(x, y) && figure.Flags&Moved == 0 {
 
 		// For both rooks
 		for dx := range []int{0, 7} {
@@ -262,7 +262,7 @@ func (self *Board) Moves(x, y int) (moves []*Move) {
 	return self.moves(x, y, false)
 }
 
-func (self *Board) moves(x, y int, testKingMove bool) (moves []*Move) {
+func (self *Board) moves(x, y int, ignoreCheckAndCastling bool) (moves []*Move) {
 	figure := self.Get(x, y)
 	if figure == nil {
 		return nil
@@ -280,7 +280,7 @@ func (self *Board) moves(x, y int, testKingMove bool) (moves []*Move) {
 	case Queen:
 		moves = self.QueenMoves(x, y)
 	case King:
-		moves = self.KingMoves(x, y, testKingMove)
+		moves = self.KingMoves(x, y, ignoreCheckAndCastling)
 	}
 	return
 }
