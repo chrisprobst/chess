@@ -2,12 +2,18 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
+	//"math/rand"
 	//"time"
 )
 
 func main() {
-	board := NewBoard()
+
+	board, err := NewBoardFromCoords("A2", "A3", "H2", "H3", "A1", "A2", "B2", "B3")
+	board, err = board.ParseAndMove("C2", "C3")
+	fmt.Println(err)
+	board.Print()
+
+	/*board := NewBoard()
 	board.Print()
 
 	white := true
@@ -53,5 +59,5 @@ func main() {
 			fmt.Println(white, " has lost!")
 			break
 		}
-	}
+	}*/
 }

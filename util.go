@@ -1,24 +1,40 @@
 package main
 
 import (
+	"errors"
 	"strconv"
 	"unicode"
 )
 
 func ParseCoords(column, row string) (int, int, error) {
-	if x, ok := LetterToColumn(rune(column[0])); ok {
-		if y, err := strconv.ParseInt(row, 10, 32); err == nil {
-			return x, int(y), nil
-		} else {
-			return -1, -1, err
-		}
+	// Check length of column
+	if len(column) != 1 {
+		return -1, -1, errors.New("Column string must have length of 1")
 	}
-	return -1, -1, nil
+
+	// Convert the letter to an index
+	x, err := letterToColumn(rune(column[0]))
+	if err != nil {
+		return -1, -1, err
+	}
+
+	// Try to parse the row
+	y, err := strconv.ParseInt(row, 10, 32)
+	if err != nil {
+		return -1, -1, err
+	}
+
+	if y < 1 || y > 8 {
+		return -1, -1, errors.New("Row index must be between 1 and 8")
+	}
+
+	// Return both values
+	return x, int(y) - 1, nil
 }
 
-func LetterToColumn(letter rune) (int, bool) {
+func letterToColumn(letter rune) (int, error) {
 	if x := int(unicode.ToLower(letter) - 'a'); x >= 0 && x <= 7 {
-		return 7 - x, true
+		return 7 - x, nil
 	}
-	return -1, false
+	return -1, errors.New("Letter not within 'a' - 'H'")
 }

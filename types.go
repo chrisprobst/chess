@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -68,6 +69,10 @@ func NewBlackFigure(model Model) *Figure {
 }
 
 type Board [8][8]*Figure
+
+func NewBoardFromCoords(coords ...string) (*Board, error) {
+	return NewBoard().ParseAndMove(coords...)
+}
 
 func NewBoard() *Board {
 	var board Board
@@ -174,6 +179,60 @@ func (self *Board) Print() {
 		fmt.Println()
 	}
 	fmt.Println()
+}
+
+func (self *Board) ParseAndMove(coords ...string) (*Board, error) {
+	if len(coords)%2 != 0 {
+		return nil, errors.New("Number of coords must be even")
+	}
+
+	// Iterate over all coords
+	for i := 0; i < len(coords); i += 2 {
+		// Select strings
+		from, to := coords[i], coords[i+1]
+
+		// Extract
+		fromSx, fromSy := from[:1], from[1:]
+		toSx, toSy := to[:1], to[1:]
+
+		// Parse
+		fromX, fromY, err := ParseCoords(fromSx, fromSy)
+		if err != nil {
+			return nil, err
+		}
+		toX, toY, err := ParseCoords(toSx, toSy)
+		if err != nil {
+			return nil, err
+		}
+
+		// Move
+		self = self.Move(fromX, fromY, toX, toY)
+		if self == nil {
+			return nil, errors.New(fmt.Sprintf("Invalid from from %s-%s to %s-%s",
+				fromSx, fromSy, toSx, toSy))
+		}
+	}
+	return self, nil
+}
+
+func (self *Board) Move(fromX, fromY, toX, toY int) *Board {
+
+	// Look through all valid moves and select valid
+	var found *Move
+	for _, move := range self.Moves(fromX, fromY) {
+		if move.XDest == toX && move.YDest == toY {
+			found = move
+			break
+		}
+	}
+
+	// There is no such much
+	if found == nil {
+		return nil
+	}
+
+	// Apply the found move
+	return self.ApplyMove(found)
 }
 
 func (self *Board) ApplyMove(move *Move) *Board {
