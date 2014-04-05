@@ -1,66 +1,66 @@
 package main
 
-func (self *Board) PawnMoves(x, y int) (moves []*Move) {
+func (self *board) pawnMoves(x, y int) (moves []*move) {
 
 	// Get the figure
-	figure := self.Get(x, y)
-	if figure == nil {
+	fig := self.get(x, y)
+	if fig == nil {
 		return
 	}
 
 	// Color to direction
 	direction := 1
-	if !figure.White {
+	if !fig.white {
 		direction = -1
 	}
 
 	// The pawn is at the end of the trail
-	if _, _, ok := self.ValidateWalls(x, y+direction); !ok {
+	if _, _, ok := self.validateWalls(x, y+direction); !ok {
 		return
 	}
 
 	// Check if this pawn would transform into something
-	var transformInto []*Figure
+	var transformInto []*figure
 	if newLoc := y + direction; newLoc == 0 || newLoc == 7 {
 		transformInto = append(transformInto,
-			NewFigure(figure.White, Knight),
-			NewFigure(figure.White, Bishop),
-			NewFigure(figure.White, Rook),
-			NewFigure(figure.White, Queen))
+			newFigure(fig.white, knight),
+			newFigure(fig.white, bishop),
+			newFigure(fig.white, rook),
+			newFigure(fig.white, queen))
 	}
 
 	// Check usual forward movement
-	if self.IsFree(x, y+direction) {
+	if self.isFree(x, y+direction) {
 
 		// Append the forward move
-		moves = append(moves, &Move{figure, nil, x, y, x, y + direction, transformInto, nil})
+		moves = append(moves, &move{fig, nil, x, y, x, y + direction, transformInto, nil})
 
 		// Check end of trail
-		if _, _, ok := self.ValidateWalls(x, y+2*direction); ok {
+		if _, _, ok := self.validateWalls(x, y+2*direction); ok {
 
 			// Check double forward movement
-			if (y == 1 || y == 6) && self.IsFree(x, y+2*direction) {
+			if (y == 1 || y == 6) && self.isFree(x, y+2*direction) {
 
 				// Append double move
-				moves = append(moves, &Move{figure, nil, x, y, x, y + 2*direction, nil, nil})
+				moves = append(moves, &move{fig, nil, x, y, x, y + 2*direction, nil, nil})
 			}
 		}
 	}
 
 	// Check if we can hit an enemy
 	for _, offset := range []int{-1, 1} {
-		if enemy := self.Get(x+offset, y+direction); enemy != nil && enemy.White != figure.White {
-			moves = append(moves, &Move{figure, enemy, x, y, x + offset, y + direction, transformInto, nil})
+		if enemy := self.get(x+offset, y+direction); enemy != nil && enemy.white != fig.white {
+			moves = append(moves, &move{fig, enemy, x, y, x + offset, y + direction, transformInto, nil})
 		}
 	}
 
 	return
 }
 
-func (self *Board) KnightMoves(x, y int) (moves []*Move) {
+func (self *board) knightMoves(x, y int) (moves []*move) {
 	// Get the figure
-	figure := self.Get(x, y)
-	if figure == nil {
+	fig := self.get(x, y)
+	if fig == nil {
 		return
 	}
 
@@ -78,16 +78,16 @@ func (self *Board) KnightMoves(x, y int) (moves []*Move) {
 			nx, ny = nx+direction[1]*variation, ny+direction[0]*variation
 
 			// Check if the position is inside the board
-			if _, _, ok := self.ValidateWalls(nx, ny); ok {
+			if _, _, ok := self.validateWalls(nx, ny); ok {
 
 				// Get the figure at this location
-				enemy := self.Get(nx, ny)
+				enemy := self.get(nx, ny)
 
 				// If there is no figure or the figure is an enemy
-				if enemy == nil || enemy.White != figure.White {
+				if enemy == nil || enemy.white != fig.white {
 
 					// Append this move
-					moves = append(moves, &Move{figure, enemy, x, y, nx, ny, nil, nil})
+					moves = append(moves, &move{fig, enemy, x, y, nx, ny, nil, nil})
 				}
 			}
 		}
@@ -96,10 +96,10 @@ func (self *Board) KnightMoves(x, y int) (moves []*Move) {
 	return
 }
 
-func (self *Board) straightMoves(x, y, maxHops int) (moves []*Move) {
+func (self *board) straightMoves(x, y, maxHops int) (moves []*move) {
 	// Get the figure
-	figure := self.Get(x, y)
-	if figure == nil {
+	fig := self.get(x, y)
+	if fig == nil {
 		return
 	}
 
@@ -116,13 +116,13 @@ func (self *Board) straightMoves(x, y, maxHops int) (moves []*Move) {
 				nx, ny := x+axis*offset, y+(1-axis)*offset
 
 				// Check board bounds
-				if _, _, ok := self.ValidateWalls(nx, ny); ok {
+				if _, _, ok := self.validateWalls(nx, ny); ok {
 					// Get figure
-					enemy := self.Get(nx, ny)
+					enemy := self.get(nx, ny)
 
 					// If there is no figure or the figure is an enemy
-					if enemy == nil || enemy.White != figure.White {
-						moves = append(moves, &Move{figure, enemy, x, y, nx, ny, nil, nil})
+					if enemy == nil || enemy.white != fig.white {
+						moves = append(moves, &move{fig, enemy, x, y, nx, ny, nil, nil})
 					}
 
 					if enemy != nil {
@@ -138,10 +138,10 @@ func (self *Board) straightMoves(x, y, maxHops int) (moves []*Move) {
 	return
 }
 
-func (self *Board) diagonalMoves(x, y, maxHops int) (moves []*Move) {
+func (self *board) diagonalMoves(x, y, maxHops int) (moves []*move) {
 	// Get the figure
-	figure := self.Get(x, y)
-	if figure == nil {
+	fig := self.get(x, y)
+	if fig == nil {
 		return
 	}
 
@@ -162,13 +162,13 @@ func (self *Board) diagonalMoves(x, y, maxHops int) (moves []*Move) {
 				nx, ny := x+offX, y+offY
 
 				// Check board bounds
-				if _, _, ok := self.ValidateWalls(nx, ny); ok {
+				if _, _, ok := self.validateWalls(nx, ny); ok {
 					// Get figure
-					enemy := self.Get(nx, ny)
+					enemy := self.get(nx, ny)
 
 					// If there is no figure or the figure is an enemy
-					if enemy == nil || enemy.White != figure.White {
-						moves = append(moves, &Move{figure, enemy, x, y, nx, ny, nil, nil})
+					if enemy == nil || enemy.white != fig.white {
+						moves = append(moves, &move{fig, enemy, x, y, nx, ny, nil, nil})
 					}
 
 					if enemy != nil {
@@ -183,21 +183,21 @@ func (self *Board) diagonalMoves(x, y, maxHops int) (moves []*Move) {
 	return
 }
 
-func (self *Board) RookMoves(x, y int) []*Move {
+func (self *board) rookMoves(x, y int) []*move {
 	return self.straightMoves(x, y, 8)
 }
 
-func (self *Board) BishopMoves(x, y int) []*Move {
+func (self *board) bishopMoves(x, y int) []*move {
 	return self.diagonalMoves(x, y, 8)
 }
 
-func (self *Board) QueenMoves(x, y int) []*Move {
-	return append(self.RookMoves(x, y), self.BishopMoves(x, y)...)
+func (self *board) queenMoves(x, y int) []*move {
+	return append(self.rookMoves(x, y), self.bishopMoves(x, y)...)
 }
 
-func (self *Board) KingMoves(x, y int, ignoreCheckAndCastling bool) (moves []*Move) {
+func (self *board) kingMoves(x, y int, ignoreCheckAndCastling bool) (moves []*move) {
 	// Get the figure
-	figure := self.Get(x, y)
+	figure := self.get(x, y)
 	if figure == nil {
 		return
 	}
@@ -208,22 +208,22 @@ func (self *Board) KingMoves(x, y int, ignoreCheckAndCastling bool) (moves []*Mo
 
 	// Iterate over all tmp moves
 	for _, move := range tmpMoves {
-		if ignoreCheckAndCastling || self.IsValidKingMove(move) {
+		if ignoreCheckAndCastling || self.isValidKingMove(move) {
 			moves = append(moves, move)
 		}
 	}
 
 	// The king-rook moves
-	if !ignoreCheckAndCastling && !self.IsKingChecked(x, y) && figure.Flags&Moved == 0 {
+	if !ignoreCheckAndCastling && !self.isKingChecked(x, y) && figure.flags&moved == 0 {
 
 		// For both rooks
 		for dx := range []int{0, 7} {
 
 			// Lookup rook
-			rook := self.Get(dx, y)
+			rook := self.get(dx, y)
 
 			// If rook exists and has the same color and has not moved yet!
-			if rook != nil && rook.White == figure.White && rook.Flags&Moved == 0 {
+			if rook != nil && rook.white == figure.white && rook.flags&moved == 0 {
 
 				// Compute the relevant scalars
 				offset, direction, distance := 1, 1, x-2
@@ -234,7 +234,7 @@ func (self *Board) KingMoves(x, y int, ignoreCheckAndCastling bool) (moves []*Mo
 				// Check if the rook can move
 				freeSpace := true
 				for i := 0; i < distance; i++ {
-					if !self.IsFree(offset+i*direction, y) {
+					if !self.isFree(offset+i*direction, y) {
 						freeSpace = false
 						break
 					}
@@ -242,12 +242,12 @@ func (self *Board) KingMoves(x, y int, ignoreCheckAndCastling bool) (moves []*Mo
 
 				if freeSpace {
 					// Create the king-rook move
-					kingRookMove := &Move{figure, nil, x, y, x - 2*direction, y, nil,
-						&Move{rook, nil, 0, y, x - direction, y, nil, nil},
+					kingRookMove := &move{figure, nil, x, y, x - 2*direction, y, nil,
+						&move{rook, nil, 0, y, x - direction, y, nil, nil},
 					}
 
 					// Add the king-rook move if valid
-					if self.IsValidKingMove(kingRookMove) {
+					if self.isValidKingMove(kingRookMove) {
 						moves = append(moves, kingRookMove)
 					}
 				}
@@ -258,29 +258,29 @@ func (self *Board) KingMoves(x, y int, ignoreCheckAndCastling bool) (moves []*Mo
 	return
 }
 
-func (self *Board) Moves(x, y int) (moves []*Move) {
-	return self.moves(x, y, false)
-}
-
-func (self *Board) moves(x, y int, ignoreCheckAndCastling bool) (moves []*Move) {
-	figure := self.Get(x, y)
-	if figure == nil {
+func (self *board) movesExt(x, y int, ignoreCheckAndCastling bool) (moves []*move) {
+	fig := self.get(x, y)
+	if fig == nil {
 		return nil
 	}
 
-	switch figure.Model {
-	case Pawn:
-		moves = self.PawnMoves(x, y)
-	case Knight:
-		moves = self.KnightMoves(x, y)
-	case Rook:
-		moves = self.RookMoves(x, y)
-	case Bishop:
-		moves = self.BishopMoves(x, y)
-	case Queen:
-		moves = self.QueenMoves(x, y)
-	case King:
-		moves = self.KingMoves(x, y, ignoreCheckAndCastling)
+	switch fig.model {
+	case pawn:
+		moves = self.pawnMoves(x, y)
+	case knight:
+		moves = self.knightMoves(x, y)
+	case rook:
+		moves = self.rookMoves(x, y)
+	case bishop:
+		moves = self.bishopMoves(x, y)
+	case queen:
+		moves = self.queenMoves(x, y)
+	case king:
+		moves = self.kingMoves(x, y, ignoreCheckAndCastling)
 	}
 	return
+}
+
+func (self *board) moves(x, y int) []*move {
+	return self.movesExt(x, y, false)
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	//"math/rand"
 	//"time"
@@ -8,10 +9,15 @@ import (
 
 func main() {
 
-	board, err := NewBoardFromCoords("A2", "A3", "H2", "H3", "A1", "A2", "B2", "B3")
-	board, err = board.ParseAndMove("C2", "C3")
-	fmt.Println(err)
-	board.Print()
+	chess, _ := NewChessFromMoves(
+		0, 1, 0, 2,
+	)
+
+	chess.Print()
+
+	moves := chess.ComputeMoves(2, 1)
+	b, _ := json.Marshal(moves)
+	fmt.Println(string(b))
 
 	/*board := NewBoard()
 	board.Print()
