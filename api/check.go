@@ -1,4 +1,4 @@
-package main
+package api
 
 func (self *board) isFoundKingChecked(white bool) bool {
 	if x, y, ok := self.find(white, king); ok {

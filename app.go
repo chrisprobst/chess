@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/chrisprobst/chess/api"
 	//"math/rand"
 	//"time"
 )
 
 func main() {
 
-	chess, _ := NewChessFromMoves(
+	chess, _ := api.NewChessFromMoves(
 		0, 1, 0, 2,
 	)
 
