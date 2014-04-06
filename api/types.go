@@ -10,50 +10,51 @@ var (
 		"Number of coords must be divisible by 4")
 )
 
-type model int
+type Model int
 type transform int
 type flag int
 
-type figure struct {
-	white bool
-	model model
+type Figure struct {
+	White bool
+	Model Model
+
 	flags flag
 }
 
-func (self *figure) print() {
-	switch self.model {
+func (self *Figure) print() {
+	switch self.Model {
 	case pawn:
-		if self.white {
+		if self.White {
 			fmt.Print("P")
 		} else {
 			fmt.Print("p")
 		}
 	case knight:
-		if self.white {
+		if self.White {
 			fmt.Print("N")
 		} else {
 			fmt.Print("n")
 		}
 	case rook:
-		if self.white {
+		if self.White {
 			fmt.Print("R")
 		} else {
 			fmt.Print("r")
 		}
 	case bishop:
-		if self.white {
+		if self.White {
 			fmt.Print("B")
 		} else {
 			fmt.Print("b")
 		}
 	case king:
-		if self.white {
+		if self.White {
 			fmt.Print("K")
 		} else {
 			fmt.Print("k")
 		}
 	case queen:
-		if self.white {
+		if self.White {
 			fmt.Print("Q")
 		} else {
 			fmt.Print("q")
@@ -61,19 +62,19 @@ func (self *figure) print() {
 	}
 }
 
-func newFigure(white bool, model model) *figure {
-	return &figure{white, model, idle}
+func newFigure(white bool, model Model) *Figure {
+	return &Figure{white, model, idle}
 }
 
-func newWhiteFigure(model model) *figure {
-	return &figure{true, model, idle}
+func newWhiteFigure(model Model) *Figure {
+	return &Figure{true, model, idle}
 }
 
-func newBlackFigure(model model) *figure {
-	return &figure{false, model, idle}
+func newBlackFigure(model Model) *Figure {
+	return &Figure{false, model, idle}
 }
 
-type board [8][8]*figure
+type board [8][8]*Figure
 
 func newBoard() *board {
 	var board board
@@ -117,26 +118,26 @@ const (
 )
 
 const (
-	rook   = model(1)
-	knight = model(2)
-	bishop = model(3)
-	queen  = model(4)
-	king   = model(5)
-	pawn   = model(6)
+	rook   = Model(1)
+	knight = Model(2)
+	bishop = Model(3)
+	queen  = Model(4)
+	king   = Model(5)
+	pawn   = Model(6)
 )
 
-type move struct {
-	figureOrigin, figureDest       *figure
-	xOrigin, yOrigin, xDest, yDest int
-	transformInto                  []*figure
-	subMove                        *move
+type Move struct {
+	FigureOrigin, FigureDest       *Figure
+	XOrigin, YOrigin, XDest, YDest int
+	TransformInto                  []*Figure
+	SubMove                        *Move
 }
 
-func (self *board) find(white bool, model model) (int, int, bool) {
+func (self *board) find(white bool, model Model) (int, int, bool) {
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 8; x++ {
 			if figure := self.get(x, y); figure != nil &&
-				figure.white == white && figure.model == model {
+				figure.White == white && figure.Model == model {
 				return x, y, true
 			}
 		}
@@ -156,7 +157,7 @@ func (self *board) isFree(x, y int) bool {
 	return self.get(x, y) == nil
 }
 
-func (self *board) set(x, y int, figure *figure) bool {
+func (self *board) set(x, y int, figure *Figure) bool {
 	if x, y, ok := self.validateWalls(x, y); ok {
 		(*self)[y][x] = figure
 		return true
@@ -164,7 +165,7 @@ func (self *board) set(x, y int, figure *figure) bool {
 	return false
 }
 
-func (self *board) get(x, y int) *figure {
+func (self *board) get(x, y int) *Figure {
 	if x, y, ok := self.validateWalls(x, y); ok {
 		return (*self)[y][x]
 	}
@@ -195,9 +196,9 @@ func (self *board) moveMultiple(coords ...int) (*board, error) {
 func (self *board) moveOne(fromX, fromY, toX, toY int) *board {
 
 	// Look through all valid moves and select valid
-	var found *move
-	for _, move := range self.movesExt(fromX, fromY, false) {
-		if move.xDest == toX && move.yDest == toY {
+	var found *Move
+	for _, move := range self.Moves(fromX, fromY) {
+		if move.XDest == toX && move.YDest == toY {
 			found = move
 			break
 		}
@@ -212,24 +213,24 @@ func (self *board) moveOne(fromX, fromY, toX, toY int) *board {
 	return self.applyMove(found)
 }
 
-func (self *board) applyMove(move *move) *board {
+func (self *board) applyMove(move *Move) *board {
 	// This creates a copy of the board on the stack
 	copy := *self
 	ptr := &copy
 
-	for movePtr := move; movePtr != nil; movePtr = movePtr.subMove {
+	for movePtr := move; movePtr != nil; movePtr = movePtr.SubMove {
 		// Create copy of the struct
-		copy := *movePtr.figureOrigin
-		movePtr.figureOrigin = &copy
+		copy := *movePtr.FigureOrigin
+		movePtr.FigureOrigin = &copy
 
-		if !ptr.set(movePtr.xDest, movePtr.yDest, movePtr.figureOrigin) {
+		if !ptr.set(movePtr.XDest, movePtr.YDest, movePtr.FigureOrigin) {
 			panic("Invalid move")
 		}
 
 		// This figure has already moved
-		movePtr.figureOrigin.flags |= moved
+		movePtr.FigureOrigin.flags |= moved
 
-		if !ptr.set(movePtr.xOrigin, movePtr.yOrigin, nil) {
+		if !ptr.set(movePtr.XOrigin, movePtr.YOrigin, nil) {
 			panic("Invalid move")
 		}
 	}

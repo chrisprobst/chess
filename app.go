@@ -16,7 +16,7 @@ func main() {
 
 	chess.Print()
 
-	moves := chess.ComputeMoves(2, 1)
+	moves := chess.Moves(2, 1)
 	b, _ := json.Marshal(moves)
 	fmt.Println(string(b))
 
