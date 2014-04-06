@@ -186,7 +186,7 @@ func (self *board) moveMultiple(coords ...int) (*board, error) {
 		// Move
 		self = self.moveOne(fromX, fromY, toX, toY)
 		if self == nil {
-			return nil, errors.New(fmt.Sprintf("Invalid from from %d-%d to %d-%d",
+			return nil, errors.New(fmt.Sprintf("Invalid move from from %d-%d to %d-%d",
 				fromX, fromY, toX, toY))
 		}
 	}
