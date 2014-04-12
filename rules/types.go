@@ -1,4 +1,4 @@
-package api
+package rules
 
 import (
 	"errors"
@@ -22,44 +22,49 @@ type Figure struct {
 }
 
 func (self *Figure) print() {
+	fmt.Print(self.sprint())
+}
+
+func (self *Figure) sprint() string {
 	switch self.Model {
 	case pawn:
 		if self.White {
-			fmt.Print("P")
+			return fmt.Sprint("P")
 		} else {
-			fmt.Print("p")
+			return fmt.Sprint("p")
 		}
 	case knight:
 		if self.White {
-			fmt.Print("N")
+			return fmt.Sprint("N")
 		} else {
-			fmt.Print("n")
+			return fmt.Sprint("n")
 		}
 	case rook:
 		if self.White {
-			fmt.Print("R")
+			return fmt.Sprint("R")
 		} else {
-			fmt.Print("r")
+			return fmt.Sprint("r")
 		}
 	case bishop:
 		if self.White {
-			fmt.Print("B")
+			return fmt.Sprint("B")
 		} else {
-			fmt.Print("b")
+			return fmt.Sprint("b")
 		}
 	case king:
 		if self.White {
-			fmt.Print("K")
+			return fmt.Sprint("K")
 		} else {
-			fmt.Print("k")
+			return fmt.Sprint("k")
 		}
 	case queen:
 		if self.White {
-			fmt.Print("Q")
+			return fmt.Sprint("Q")
 		} else {
-			fmt.Print("q")
+			return fmt.Sprint("q")
 		}
 	}
+	panic("Unknown model")
 }
 
 func newFigure(white bool, model Model) *Figure {
@@ -113,8 +118,8 @@ func newBoardFromMoves(coords ...int) (*board, error) {
 }
 
 const (
-	idle  = flag(0)
-	moved = flag(1 << 0)
+	idle  = flag(1 << 0)
+	moved = flag(1 << 1)
 )
 
 const (
@@ -204,7 +209,7 @@ func (self *board) moveOne(fromX, fromY, toX, toY int) *board {
 		}
 	}
 
-	// There is no such much
+	// There is no such move
 	if found == nil {
 		return nil
 	}

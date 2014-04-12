@@ -1,10 +1,30 @@
-package api
+package rules
 
 func (self *board) isFoundKingChecked(white bool) bool {
 	if x, y, ok := self.find(white, king); ok {
 		return self.isKingChecked(x, y)
 	}
 	return false
+}
+
+func (self *board) isKingCheckMate(x, y int) bool {
+	kingFigure, checked := self.get(x, y), self.isKingChecked(x, y)
+	if !checked {
+		return false
+	}
+
+	for ny := 0; ny < 8; ny++ {
+		for nx := 0; nx < 8; nx++ {
+			if friend := self.get(nx, ny); friend != nil && friend.White == kingFigure.White {
+				for _, move := range self.moves(x, y, false) {
+					if !self.applyMove(move).isFoundKingChecked(kingFigure.White) {
+						return false
+					}
+				}
+			}
+		}
+	}
+	return true
 }
 
 func (self *board) isKingChecked(x, y int) bool {

@@ -1,4 +1,4 @@
-package api
+package rules
 
 func (self *board) pawnMoves(x, y int) (moves []*Move) {
 

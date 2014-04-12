@@ -1,4 +1,4 @@
-package api
+package rules
 
 import (
 	"fmt"
@@ -25,18 +25,35 @@ func (self *board) Move(fromX, fromY, toX, toY int) bool {
 }
 
 func (self *board) Print() {
-	fmt.Println()
+	fmt.Print(self.SPrint())
+}
+
+func (self *board) SPrint() string {
+	s := fmt.Sprintln()
 	for _, row := range self {
 		for _, piece := range row {
 			if piece != nil {
-				piece.print()
+				s += piece.sprint()
 			} else {
-				fmt.Print(".")
+				s += fmt.Sprint(".")
 			}
 		}
-		fmt.Println()
+		s += fmt.Sprintln()
 	}
-	fmt.Println()
+	s += fmt.Sprintln()
+	return s
+}
+
+func (self *board) Board() *[8][8]Model {
+	grid := new([8][8]Model)
+	for y, row := range *self {
+		for x, column := range row {
+			if column != nil {
+				grid[y][x] = column.Model
+			}
+		}
+	}
+	return grid
 }
 
 type Chess interface {
@@ -47,6 +64,10 @@ type Chess interface {
 	// Moves the figure using the given coordinates.
 	Move(fromX, fromY, toX, toY int) bool
 
-	// Prints the board.
+	// Return the board for rendering
+	Board() *[8][8]Model
+
+	// DEBUG: Prints the board.
 	Print()
+	SPrint() string
 }
